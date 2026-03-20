@@ -1,0 +1,1689 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>スライド目次メーカー</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Noto+Serif+JP:wght@300;400;700;900&family=M+PLUS+Rounded+1c:wght@300;400;700;800&family=BIZ+UDGothic:wght@400;700&family=Shippori+Mincho:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f0f2f5;
+    --panel: #ffffff;
+    --panel2: #e8eaed;
+    --accent: #e94560;
+    --accent2: #f5a623;
+    --text: #1a1a2e;
+    --text-dim: #666680;
+    --border: #d0d4dd;
+    --canvas-w: 1280px;
+    --canvas-h: 720px;
+  }
+  body.dark {
+    --bg: #1a1a2e;
+    --panel: #16213e;
+    --panel2: #0f3460;
+    --text: #eaeaea;
+    --text-dim: #8a8a9a;
+    --border: #2a2a4a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    font-size: 13px;
+  }
+
+  /* ===== LEFT PANEL ===== */
+  #left-panel {
+    width: 280px;
+    min-width: 280px;
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .panel-header {
+    padding: 14px 16px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    border-bottom: 1px solid var(--border);
+    background: var(--panel2);
+  }
+  .panel-section {
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .panel-scroll {
+    overflow-y: auto;
+    flex: 1;
+  }
+  .panel-scroll::-webkit-scrollbar { width: 4px; }
+  .panel-scroll::-webkit-scrollbar-track { background: transparent; }
+  .panel-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .section-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 12px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-weight: 500;
+    transition: all 0.15s;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+  .btn-primary:hover { background: #c73450; }
+  .btn-secondary {
+    background: var(--panel2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { opacity: 0.8; }
+  .btn-full { width: 100%; justify-content: center; margin-bottom: 6px; }
+  .btn-icon { padding: 6px 10px; font-size: 14px; }
+
+  label { display: block; margin-bottom: 3px; color: var(--text-dim); font-size: 11px; }
+  input[type=text], input[type=number], select, textarea {
+    width: 100%;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--text);
+    padding: 5px 8px;
+    font-size: 12px;
+    font-family: 'Noto Sans JP', sans-serif;
+    outline: none;
+    margin-bottom: 8px;
+    transition: border-color 0.15s;
+  }
+  input[type=text]:focus, input[type=number]:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+  }
+  textarea { resize: vertical; min-height: 60px; }
+  input[type=color] {
+    width: 32px; height: 26px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    background: none;
+    padding: 1px;
+  }
+  input[type=range] {
+    width: 100%;
+    accent-color: var(--accent);
+    margin-bottom: 6px;
+  }
+  .row { display: flex; gap: 6px; align-items: center; }
+  .row > * { flex: 1; }
+  .row.tight { margin-bottom: 8px; }
+
+  .checkbox-row {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 8px; cursor: pointer;
+  }
+  .checkbox-row input { width: auto; margin: 0; }
+  .checkbox-row span { font-size: 12px; color: var(--text); }
+
+  .textbox-item {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .textbox-item:hover, .textbox-item.selected {
+    border-color: var(--accent);
+  }
+  .textbox-item-header {
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .textbox-item-label {
+    font-size: 11px; color: var(--text-dim);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 160px;
+  }
+  .textbox-item-actions { display: flex; gap: 4px; }
+  .icon-btn {
+    background: none; border: none; cursor: pointer;
+    color: var(--text-dim); padding: 2px 4px; font-size: 12px;
+    border-radius: 3px; transition: color 0.15s;
+  }
+  .icon-btn:hover { color: var(--text); }
+  .icon-btn.danger:hover { color: var(--accent); }
+
+  .deco-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+    margin-bottom: 8px;
+  }
+  .deco-btn {
+    aspect-ratio: 16/9;
+    border: 2px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    background: var(--panel2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; color: var(--text-dim);
+    transition: all 0.15s; position: relative; overflow: hidden;
+  }
+  .deco-btn:hover, .deco-btn.active { border-color: var(--accent); color: var(--text); }
+  .deco-btn svg { width: 100%; height: 100%; position: absolute; inset: 0; }
+
+  /* ===== CENTER AREA ===== */
+  #center {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--bg);
+  }
+  #toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  #toolbar .sep {
+    width: 1px; height: 20px;
+    background: var(--border);
+    margin: 0 4px;
+  }
+  .tool-label { font-size: 10px; color: var(--text-dim); letter-spacing: 0.08em; }
+
+  #canvas-wrapper {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: auto;
+    padding: 30px;
+    background: var(--bg);
+  }
+  body.dark #canvas-wrapper {
+    background: #111122;
+  }
+  #canvas-container {
+    position: relative;
+    box-shadow: 0 20px 80px rgba(0,0,0,0.7);
+    flex-shrink: 0;
+  }
+  #slide-canvas {
+    display: block;
+  }
+
+  /* ===== RIGHT PANEL ===== */
+  #right-panel {
+    width: 260px;
+    min-width: 260px;
+    background: var(--panel);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  #right-panel .panel-scroll { padding: 0; }
+
+  .prop-group {
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .prop-group .section-title { margin-bottom: 10px; }
+
+  .align-btns { display: flex; gap: 4px; margin-bottom: 8px; }
+  .align-btn {
+    flex: 1; padding: 5px 4px;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-dim);
+    cursor: pointer; font-size: 12px;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .align-btn:hover, .align-btn.active { border-color: var(--accent); color: var(--text); }
+
+  .style-btns { display: flex; gap: 4px; margin-bottom: 8px; }
+  .style-btn {
+    flex: 1; padding: 5px;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-dim);
+    cursor: pointer; font-size: 13px;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .style-btn:hover, .style-btn.active { border-color: var(--accent); color: var(--text); }
+
+  /* 複数選択ハイライト */
+  .canvas-textbox.multi-selected .tb-border {
+    border-color: rgba(245, 166, 35, 0.85) !important;
+    border-style: solid !important;
+  }
+
+  /* 整列ボタングループ */
+  .snap-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    margin-bottom: 8px;
+  }
+  .snap-btn {
+    padding: 5px 4px;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 11px;
+    text-align: center;
+    transition: all 0.15s;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .snap-btn:hover { border-color: var(--accent2); color: var(--text); }
+
+  /* ダークモード切り替えボタン */
+  #theme-btn {
+    padding: 5px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--panel2);
+    color: var(--text);
+    cursor: pointer;
+    font-size: 12px;
+    font-family: 'Noto Sans JP', sans-serif;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  #theme-btn:hover { border-color: var(--accent); }
+
+  /* ===== CANVAS OVERLAYS ===== */
+  .canvas-textbox {
+    position: absolute;
+    cursor: move;
+    outline: none;
+    user-select: none;
+  }
+  .canvas-textbox .tb-border {
+    position: absolute;
+    inset: 0;
+    border: 2px dashed transparent;
+    border-radius: 3px;
+    pointer-events: none;
+    transition: border-color 0.15s;
+  }
+  .canvas-textbox.selected .tb-border {
+    border-color: rgba(233, 69, 96, 0.8);
+  }
+  .canvas-textbox .tb-content {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .canvas-textbox .resize-handle {
+    position: absolute;
+    width: 10px; height: 10px;
+    background: var(--accent);
+    border: 2px solid #fff;
+    border-radius: 2px;
+    cursor: se-resize;
+    bottom: -5px; right: -5px;
+    display: none;
+  }
+  .canvas-textbox.selected .resize-handle { display: block; }
+
+  /* image overlay */
+  .canvas-image {
+    position: absolute;
+    cursor: move;
+  }
+  .canvas-image img {
+    width: 100%; height: 100%;
+    object-fit: contain;
+    display: block;
+    pointer-events: none;
+  }
+  .canvas-image .resize-handle {
+    position: absolute;
+    width: 10px; height: 10px;
+    background: #f5a623;
+    border: 2px solid #fff;
+    border-radius: 2px;
+    cursor: se-resize;
+    bottom: -5px; right: -5px;
+  }
+  .canvas-image .img-border {
+    position: absolute;
+    inset: 0;
+    border: 2px dashed transparent;
+    pointer-events: none;
+  }
+  .canvas-image.selected .img-border { border-color: rgba(245,166,35,0.8); }
+
+  /* decoration overlay */
+  #deco-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  #deco-overlay svg { width: 100%; height: 100%; }
+
+  /* no-select during drag */
+  .dragging { user-select: none; }
+
+  /* Export button */
+  #export-btn {
+    background: linear-gradient(135deg, var(--accent), #c73450);
+    color: #fff;
+    border: none;
+    padding: 7px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 13px;
+    font-family: 'Noto Sans JP', sans-serif;
+    letter-spacing: 0.05em;
+    transition: opacity 0.15s;
+    margin-left: auto;
+  }
+  #export-btn:hover { opacity: 0.85; }
+
+  .no-selection-hint {
+    color: var(--text-dim);
+    font-size: 11px;
+    text-align: center;
+    padding: 20px 12px;
+    line-height: 1.6;
+  }
+
+  /* zoom display */
+  #zoom-display {
+    font-size: 11px;
+    color: var(--text-dim);
+    min-width: 40px;
+    text-align: center;
+  }
+
+  /* tab bar for right panel */
+  .tab-bar {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+  }
+  .tab {
+    flex: 1;
+    padding: 9px 4px;
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-dim);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    letter-spacing: 0.04em;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* image upload area */
+  .upload-area {
+    border: 2px dashed var(--border);
+    border-radius: 6px;
+    padding: 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    color: var(--text-dim);
+    font-size: 11px;
+    line-height: 1.8;
+  }
+  .upload-area:hover { border-color: var(--accent2); color: var(--text); }
+  .upload-area .upload-icon { font-size: 24px; display: block; margin-bottom: 4px; }
+  #img-file-input { display: none; }
+</style>
+</head>
+<body>
+
+<!-- ===== LEFT PANEL ===== -->
+<div id="left-panel">
+  <div class="panel-header" style="display:flex;align-items:center;justify-content:space-between;">
+    <span>🎨 スライド目次メーカー</span>
+    <button id="theme-btn" onclick="toggleTheme()">🌙 ダーク</button>
+  </div>
+  <div class="panel-scroll">
+
+    <!-- 背景設定 -->
+    <div class="panel-section">
+      <div class="section-title">背景</div>
+      <div class="row tight">
+        <div>
+          <label>背景色</label>
+          <input type="color" id="bg-color" value="#ffffff">
+        </div>
+        <div style="flex:3">
+          <label>背景スタイル</label>
+          <select id="bg-style">
+            <option value="solid">ベタ塗り</option>
+            <option value="gradient-lr">グラデーション (左→右)</option>
+            <option value="gradient-tb">グラデーション (上→下)</option>
+            <option value="gradient-diag">グラデーション (斜め)</option>
+          </select>
+        </div>
+        <div>
+          <label>色2</label>
+          <input type="color" id="bg-color2" value="#e8eaf6">
+        </div>
+      </div>
+    </div>
+
+    <!-- テキストボックス -->
+    <div class="panel-section">
+      <div class="section-title">テキストボックス</div>
+      <button class="btn btn-primary btn-full" onclick="addTextbox()">＋ テキストボックス追加</button>
+      <div id="textbox-list"></div>
+    </div>
+
+    <!-- 装飾フレーム -->
+    <div class="panel-section">
+      <div class="section-title">装飾フレーム</div>
+      <div class="deco-grid" id="deco-grid">
+        <div class="deco-btn active" data-deco="none" onclick="setDeco('none', this)" title="なし">
+          <svg viewBox="0 0 160 90" fill="none"><rect x="4" y="4" width="152" height="82" stroke="#444" stroke-width="1" stroke-dasharray="4 3" rx="2"/></svg>
+          <span style="position:relative;z-index:1;font-size:9px">なし</span>
+        </div>
+        <div class="deco-btn" data-deco="rect-simple" onclick="setDeco('rect-simple', this)" title="シンプル枠">
+          <svg viewBox="0 0 160 90" fill="none"><rect x="4" y="4" width="152" height="82" stroke="#888" stroke-width="3" rx="2"/></svg>
+        </div>
+        <div class="deco-btn" data-deco="rect-double" onclick="setDeco('rect-double', this)" title="二重枠">
+          <svg viewBox="0 0 160 90" fill="none">
+            <rect x="4" y="4" width="152" height="82" stroke="#888" stroke-width="2.5" rx="2"/>
+            <rect x="10" y="10" width="140" height="70" stroke="#888" stroke-width="1.5" rx="1"/>
+          </svg>
+        </div>
+        <div class="deco-btn" data-deco="corner-bracket" onclick="setDeco('corner-bracket', this)" title="コーナー装飾">
+          <svg viewBox="0 0 160 90" fill="none">
+            <path d="M4 24 L4 4 L24 4" stroke="#888" stroke-width="3"/>
+            <path d="M136 4 L156 4 L156 24" stroke="#888" stroke-width="3"/>
+            <path d="M4 66 L4 86 L24 86" stroke="#888" stroke-width="3"/>
+            <path d="M136 86 L156 86 L156 66" stroke="#888" stroke-width="3"/>
+          </svg>
+        </div>
+        <div class="deco-btn" data-deco="left-bar" onclick="setDeco('left-bar', this)" title="左帯">
+          <svg viewBox="0 0 160 90" fill="none">
+            <rect x="4" y="4" width="16" height="82" fill="#888" rx="2"/>
+            <rect x="6" y="30" width="148" height="1.5" fill="#bbb"/>
+          </svg>
+        </div>
+        <div class="deco-btn" data-deco="top-bar" onclick="setDeco('top-bar', this)" title="上帯">
+          <svg viewBox="0 0 160 90" fill="none">
+            <rect x="4" y="4" width="152" height="14" fill="#888" rx="2"/>
+            <rect x="6" y="60" width="148" height="1.5" fill="#bbb"/>
+          </svg>
+        </div>
+        <div class="deco-btn" data-deco="diagonal-stripes" onclick="setDeco('diagonal-stripes', this)" title="斜めライン">
+          <svg viewBox="0 0 160 90" fill="none">
+            <clipPath id="dc"><rect x="4" y="4" width="152" height="82" rx="2"/></clipPath>
+            <g clip-path="url(#dc)">
+              <line x1="-10" y1="90" x2="90" y2="-10" stroke="#888" stroke-width="1.5" opacity="0.5"/>
+              <line x1="30" y1="90" x2="130" y2="-10" stroke="#888" stroke-width="1.5" opacity="0.5"/>
+              <line x1="70" y1="90" x2="170" y2="-10" stroke="#888" stroke-width="1.5" opacity="0.5"/>
+            </g>
+            <rect x="4" y="4" width="152" height="82" stroke="#888" stroke-width="2" rx="2"/>
+          </svg>
+        </div>
+        <div class="deco-btn" data-deco="circle-deco" onclick="setDeco('circle-deco', this)" title="円形装飾">
+          <svg viewBox="0 0 160 90" fill="none">
+            <ellipse cx="80" cy="45" rx="50" ry="38" stroke="#888" stroke-width="2"/>
+            <ellipse cx="80" cy="45" rx="70" ry="41" stroke="#888" stroke-width="1.2" opacity="0.5"/>
+          </svg>
+        </div>
+        <div class="deco-btn" data-deco="ribbon-top" onclick="setDeco('ribbon-top', this)" title="リボン上">
+          <svg viewBox="0 0 160 90" fill="none">
+            <rect x="4" y="4" width="152" height="82" stroke="#888" stroke-width="1.5" rx="2"/>
+            <rect x="4" y="4" width="152" height="18" fill="#888" opacity="0.7" rx="2"/>
+            <path d="M60 22 L80 30 L100 22" stroke="#fff" stroke-width="2" fill="none"/>
+          </svg>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>枠の色</label>
+          <input type="color" id="deco-color" value="#333333" onchange="updateDeco()">
+        </div>
+        <div style="flex:3">
+          <label>枠の太さ <span id="deco-size-val">3</span>px</label>
+          <input type="range" id="deco-size" min="1" max="20" value="3" oninput="document.getElementById('deco-size-val').textContent=this.value; updateDeco()">
+        </div>
+      </div>
+      <div>
+        <label>枠の不透明度 <span id="deco-opacity-val">100</span>%</label>
+        <input type="range" id="deco-opacity" min="0" max="100" value="100" oninput="document.getElementById('deco-opacity-val').textContent=this.value; updateDeco()">
+      </div>
+    </div>
+
+    <!-- 画像 -->
+    <div class="panel-section">
+      <div class="section-title">画像を追加</div>
+      <div class="upload-area" onclick="document.getElementById('img-file-input').click()">
+        <span class="upload-icon">🖼️</span>
+        クリックして画像を選択<br><span style="font-size:9px">PNG / JPG / SVG</span>
+      </div>
+      <input type="file" id="img-file-input" accept="image/*" onchange="addImage(this)">
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== CENTER ===== -->
+<div id="center">
+  <!-- Toolbar -->
+  <div id="toolbar">
+    <span class="tool-label">ズーム</span>
+    <button class="btn btn-secondary btn-icon" onclick="changeZoom(-0.1)">−</button>
+    <span id="zoom-display">67%</span>
+    <button class="btn btn-secondary btn-icon" onclick="changeZoom(0.1)">＋</button>
+    <button class="btn btn-secondary" onclick="fitZoom()">フィット</button>
+    <div class="sep"></div>
+    <span class="tool-label">中央配置</span>
+    <button class="btn btn-secondary btn-icon" title="水平中央" onclick="snapToCanvasCenter('h')">⇔</button>
+    <button class="btn btn-secondary btn-icon" title="垂直中央" onclick="snapToCanvasCenter('v')">⇕</button>
+    <button class="btn btn-secondary btn-icon" title="縦横中央" onclick="snapToCanvasCenter('both')">⊕</button>
+    <div class="sep"></div>
+    <span class="tool-label" id="align-label" style="display:none">端揃え</span>
+    <div id="multi-align-btns" style="display:none;gap:4px;align-items:center">
+      <button class="btn btn-secondary btn-icon" title="左端揃え" onclick="alignSelected('left')">⊢</button>
+      <button class="btn btn-secondary btn-icon" title="右端揃え" onclick="alignSelected('right')">⊣</button>
+      <button class="btn btn-secondary btn-icon" title="上端揃え" onclick="alignSelected('top')">⊤</button>
+      <button class="btn btn-secondary btn-icon" title="下端揃え" onclick="alignSelected('bottom')">⊥</button>
+      <button class="btn btn-secondary btn-icon" title="水平中央揃え" onclick="alignSelected('centerH')">↔</button>
+      <button class="btn btn-secondary btn-icon" title="垂直中央揃え" onclick="alignSelected('centerV')">↕</button>
+    </div>
+    <div class="sep"></div>
+    <button class="btn btn-secondary" onclick="clearAll()">🗑 全削除</button>
+    <div class="sep"></div>
+    <button id="export-btn" onclick="exportPNG()">📥 PNGエクスポート</button>
+  </div>
+
+  <!-- Canvas wrapper -->
+  <div id="canvas-wrapper">
+    <div id="canvas-container">
+      <!-- Background canvas -->
+      <canvas id="slide-canvas" width="1280" height="720"></canvas>
+      <!-- Decoration overlay -->
+      <div id="deco-overlay"></div>
+      <!-- Image overlays -->
+      <div id="images-layer"></div>
+      <!-- Text box overlays -->
+      <div id="textboxes-layer"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== RIGHT PANEL ===== -->
+<div id="right-panel">
+  <div class="panel-header">プロパティ</div>
+  <div class="tab-bar">
+    <div class="tab active" onclick="switchTab('text')">テキスト</div>
+    <div class="tab" onclick="switchTab('pos')">位置・サイズ</div>
+  </div>
+  <div class="panel-scroll">
+
+    <div id="no-selection-msg" class="no-selection-hint">
+      テキストボックスを選択すると<br>ここでスタイルを編集できます
+    </div>
+
+    <div id="props-text" class="tab-content active">
+      <div class="prop-group">
+        <div class="section-title">テキスト内容</div>
+        <textarea id="prop-text" rows="4" placeholder="テキストを入力..." oninput="updateSelectedText('text', this.value)"></textarea>
+      </div>
+      <div class="prop-group">
+        <div class="section-title">フォント</div>
+        <label>フォントファミリー</label>
+        <select id="prop-font" onchange="updateSelectedText('font', this.value)">
+          <option value="'Noto Sans JP', sans-serif">Noto Sans JP (ゴシック)</option>
+          <option value="'Noto Serif JP', serif">Noto Serif JP (明朝)</option>
+          <option value="'M PLUS Rounded 1c', sans-serif">M PLUS Rounded (丸ゴシック)</option>
+          <option value="'BIZ UDGothic', sans-serif">BIZ UDGothic</option>
+          <option value="'Shippori Mincho', serif">しっぽり明朝</option>
+        </select>
+        <div class="row tight">
+          <div>
+            <label>サイズ (px)</label>
+            <input type="number" id="prop-size" value="32" min="8" max="200" oninput="updateSelectedText('size', this.value)">
+          </div>
+          <div>
+            <label>太さ</label>
+            <select id="prop-weight" onchange="updateSelectedText('weight', this.value)">
+              <option value="300">細い</option>
+              <option value="400">標準</option>
+              <option value="500" selected>Medium</option>
+              <option value="700">太い</option>
+              <option value="900">極太</option>
+            </select>
+          </div>
+        </div>
+        <div class="style-btns">
+          <div class="style-btn" id="btn-italic" onclick="toggleStyle('italic')" title="イタリック"><i>I</i></div>
+          <div class="style-btn" id="btn-underline" onclick="toggleStyle('underline')" title="下線"><u>U</u></div>
+          <div class="style-btn" id="btn-strike" onclick="toggleStyle('strike')" title="取り消し線"><s>S</s></div>
+        </div>
+        <label>文字色</label>
+        <div class="row tight">
+          <input type="color" id="prop-color" value="#222222" onchange="updateSelectedText('color', this.value)">
+          <select id="prop-color-preset" onchange="applyColorPreset(this.value)" style="flex:3">
+            <option value="">プリセット...</option>
+            <option value="#000000">ブラック</option>
+            <option value="#ffffff">ホワイト</option>
+            <option value="#1a237e">ディープブルー</option>
+            <option value="#b71c1c">ディープレッド</option>
+            <option value="#1b5e20">ディープグリーン</option>
+            <option value="#f57f17">アンバー</option>
+            <option value="#4a148c">パープル</option>
+            <option value="#e94560">アクセントレッド</option>
+          </select>
+        </div>
+        <label>行の高さ <span id="lh-val">1.4</span></label>
+        <input type="range" id="prop-lh" min="0.8" max="3" step="0.1" value="1.4" oninput="document.getElementById('lh-val').textContent=parseFloat(this.value).toFixed(1); updateSelectedText('lineHeight', this.value)">
+        <label>文字間隔 <span id="ls-val">0</span>px</label>
+        <input type="range" id="prop-ls" min="-5" max="30" step="0.5" value="0" oninput="document.getElementById('ls-val').textContent=parseFloat(this.value).toFixed(1); updateSelectedText('letterSpacing', this.value)">
+      </div>
+      <div class="prop-group">
+        <div class="section-title">テキスト配置</div>
+        <div class="align-btns">
+          <div class="align-btn active" onclick="updateSelectedText('align','left'); setAlignActive(this)">左</div>
+          <div class="align-btn" onclick="updateSelectedText('align','center'); setAlignActive(this)">中央</div>
+          <div class="align-btn" onclick="updateSelectedText('align','right'); setAlignActive(this)">右</div>
+        </div>
+        <div class="align-btns">
+          <div class="align-btn" onclick="updateSelectedText('valign','flex-start'); setVAlignActive(this)" title="上揃え">↑上</div>
+          <div class="align-btn active" onclick="updateSelectedText('valign','center'); setVAlignActive(this)" title="中央揃え">↕中</div>
+          <div class="align-btn" onclick="updateSelectedText('valign','flex-end'); setVAlignActive(this)" title="下揃え">↓下</div>
+        </div>
+      </div>
+      <div class="prop-group">
+        <div class="section-title">背景・枠線</div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="prop-bg-enabled" onchange="updateSelectedText('bgEnabled', this.checked)">
+          <span>背景色を使用</span>
+        </div>
+        <div class="row tight">
+          <div>
+            <label>背景色</label>
+            <input type="color" id="prop-bg" value="#ffffff" onchange="updateSelectedText('bg', this.value)">
+          </div>
+          <div style="flex:3">
+            <label>不透明度 <span id="bg-op-val">100</span>%</label>
+            <input type="range" id="prop-bg-opacity" min="0" max="100" value="100" oninput="document.getElementById('bg-op-val').textContent=this.value; updateSelectedText('bgOpacity', this.value)">
+          </div>
+        </div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="prop-border-enabled" onchange="updateSelectedText('borderEnabled', this.checked)">
+          <span>枠線を使用</span>
+        </div>
+        <div class="row tight">
+          <div>
+            <label>枠色</label>
+            <input type="color" id="prop-border-color" value="#333333" onchange="updateSelectedText('borderColor', this.value)">
+          </div>
+          <div style="flex:3">
+            <label>太さ <span id="bw-val">2</span>px</label>
+            <input type="range" id="prop-border-width" min="1" max="20" value="2" oninput="document.getElementById('bw-val').textContent=this.value; updateSelectedText('borderWidth', this.value)">
+          </div>
+        </div>
+        <label>角丸 <span id="br-val">0</span>px</label>
+        <input type="range" id="prop-border-radius" min="0" max="60" value="0" oninput="document.getElementById('br-val').textContent=this.value; updateSelectedText('borderRadius', this.value)">
+      </div>
+    </div>
+
+    <div id="props-pos" class="tab-content">
+      <div class="prop-group">
+        <div class="section-title">位置 (px)</div>
+        <div class="row tight">
+          <div><label>X</label><input type="number" id="prop-x" value="0" oninput="updateSelectedPos('x', this.value)"></div>
+          <div><label>Y</label><input type="number" id="prop-y" value="0" oninput="updateSelectedPos('y', this.value)"></div>
+        </div>
+        <div class="section-title" style="margin-top:4px">サイズ (px)</div>
+        <div class="row tight">
+          <div><label>幅 W</label><input type="number" id="prop-w" value="400" oninput="updateSelectedPos('w', this.value)"></div>
+          <div><label>高さ H</label><input type="number" id="prop-h" value="100" oninput="updateSelectedPos('h', this.value)"></div>
+        </div>
+        <button class="btn btn-secondary btn-full" style="margin-top:8px" onclick="snapToCanvasCenter('both')">⊕ スライド中央に配置</button>
+        <div class="row tight" style="margin-top:4px">
+          <button class="btn btn-secondary" style="flex:1;font-size:11px" onclick="snapToCanvasCenter('h')">⇔ 水平中央</button>
+          <button class="btn btn-secondary" style="flex:1;font-size:11px" onclick="snapToCanvasCenter('v')">⇕ 垂直中央</button>
+        </div>
+        <button class="btn btn-secondary btn-full" onclick="duplicateSelected()">複製</button>
+        <button class="btn btn-primary btn-full" style="background:#e94560;margin-top:4px" onclick="deleteSelected()">削除</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ===== STATE =====
+const CANVAS_W = 1280, CANVAS_H = 720;
+let zoom = 0.67;
+let textboxes = [];
+let images = [];
+let selectedId = null;
+let selectedType = null; // 'text' | 'image'
+let multiSelected = new Set(); // 複数選択中のtextbox id
+let currentDeco = 'none';
+let idCounter = 0;
+let isDark = false;
+
+const canvas = document.getElementById('slide-canvas');
+const ctx = canvas.getContext('2d');
+const tbLayer = document.getElementById('textboxes-layer');
+const imgLayer = document.getElementById('images-layer');
+const container = document.getElementById('canvas-container');
+const decoOverlay = document.getElementById('deco-overlay');
+
+// ===== ZOOM =====
+function applyZoom() {
+  const w = CANVAS_W * zoom, h = CANVAS_H * zoom;
+  container.style.width = w + 'px';
+  container.style.height = h + 'px';
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
+  document.getElementById('zoom-display').textContent = Math.round(zoom * 100) + '%';
+  // scale all overlay elements
+  tbLayer.style.transform = `scale(${zoom})`;
+  tbLayer.style.transformOrigin = '0 0';
+  tbLayer.style.width = CANVAS_W + 'px';
+  tbLayer.style.height = CANVAS_H + 'px';
+  tbLayer.style.position = 'absolute';
+  tbLayer.style.top = '0'; tbLayer.style.left = '0';
+  imgLayer.style.transform = `scale(${zoom})`;
+  imgLayer.style.transformOrigin = '0 0';
+  imgLayer.style.width = CANVAS_W + 'px';
+  imgLayer.style.height = CANVAS_H + 'px';
+  imgLayer.style.position = 'absolute';
+  imgLayer.style.top = '0'; imgLayer.style.left = '0';
+  decoOverlay.style.transform = `scale(${zoom})`;
+  decoOverlay.style.transformOrigin = '0 0';
+  decoOverlay.style.width = CANVAS_W + 'px';
+  decoOverlay.style.height = CANVAS_H + 'px';
+  decoOverlay.style.position = 'absolute';
+  decoOverlay.style.top = '0'; decoOverlay.style.left = '0';
+}
+function changeZoom(delta) {
+  zoom = Math.max(0.2, Math.min(2, zoom + delta));
+  applyZoom();
+}
+function fitZoom() {
+  const wrapper = document.getElementById('canvas-wrapper');
+  const availW = wrapper.clientWidth - 60;
+  const availH = wrapper.clientHeight - 60;
+  zoom = Math.min(availW / CANVAS_W, availH / CANVAS_H);
+  applyZoom();
+}
+
+// ===== BACKGROUND =====
+function drawBackground() {
+  const bgColor = document.getElementById('bg-color').value;
+  const bgColor2 = document.getElementById('bg-color2').value;
+  const bgStyle = document.getElementById('bg-style').value;
+
+  if (bgStyle === 'solid') {
+    ctx.fillStyle = bgColor;
+    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+  } else {
+    let grad;
+    if (bgStyle === 'gradient-lr') grad = ctx.createLinearGradient(0, 0, CANVAS_W, 0);
+    else if (bgStyle === 'gradient-tb') grad = ctx.createLinearGradient(0, 0, 0, CANVAS_H);
+    else grad = ctx.createLinearGradient(0, 0, CANVAS_W, CANVAS_H);
+    grad.addColorStop(0, bgColor);
+    grad.addColorStop(1, bgColor2);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+  }
+}
+
+document.getElementById('bg-color').addEventListener('input', drawBackground);
+document.getElementById('bg-color2').addEventListener('input', drawBackground);
+document.getElementById('bg-style').addEventListener('change', drawBackground);
+
+// ===== DECORATION =====
+function setDeco(name, el) {
+  currentDeco = name;
+  document.querySelectorAll('.deco-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  updateDeco();
+}
+
+function updateDeco() {
+  const color = document.getElementById('deco-color').value;
+  const size = document.getElementById('deco-size').value;
+  const opacity = document.getElementById('deco-opacity').value / 100;
+  const W = CANVAS_W, H = CANVAS_H;
+  const s = parseFloat(size);
+
+  let svgContent = '';
+  const attrs = `stroke="${color}" stroke-width="${s}" fill="none" opacity="${opacity}"`;
+  const fillAttrs = `fill="${color}" opacity="${opacity}"`;
+
+  switch (currentDeco) {
+    case 'none':
+      decoOverlay.innerHTML = '';
+      return;
+    case 'rect-simple':
+      svgContent = `<rect x="${s/2}" y="${s/2}" width="${W-s}" height="${H-s}" ${attrs} rx="0"/>`;
+      break;
+    case 'rect-double':
+      const g = s * 2.5;
+      svgContent = `<rect x="${s/2}" y="${s/2}" width="${W-s}" height="${H-s}" ${attrs}/>
+        <rect x="${g}" y="${g}" width="${W-g*2}" height="${H-g*2}" stroke="${color}" stroke-width="${s*0.6}" fill="none" opacity="${opacity}"/>`;
+      break;
+    case 'corner-bracket':
+      const cs = Math.min(W * 0.12, 100);
+      svgContent = `
+        <path d="M${s} ${cs+s} L${s} ${s} L${cs+s} ${s}" ${attrs}/>
+        <path d="M${W-cs-s} ${s} L${W-s} ${s} L${W-s} ${cs+s}" ${attrs}/>
+        <path d="M${s} ${H-cs-s} L${s} ${H-s} L${cs+s} ${H-s}" ${attrs}/>
+        <path d="M${W-cs-s} ${H-s} L${W-s} ${H-s} L${W-s} ${H-cs-s}" ${attrs}/>`;
+      break;
+    case 'left-bar':
+      const bw = Math.max(s * 4, 20);
+      svgContent = `<rect x="0" y="0" width="${bw}" height="${H}" ${fillAttrs}/>
+        <line x1="${bw+s}" y1="${H*0.42}" x2="${W}" y2="${H*0.42}" stroke="${color}" stroke-width="${Math.max(1,s*0.5)}" opacity="${opacity}"/>`;
+      break;
+    case 'top-bar':
+      const th = Math.max(s * 4, 20);
+      svgContent = `<rect x="0" y="0" width="${W}" height="${th}" ${fillAttrs}/>
+        <line x1="0" y1="${th+s}" x2="${W}" y2="${th+s}" stroke="${color}" stroke-width="${Math.max(1,s*0.5)}" opacity="${opacity}"/>`;
+      break;
+    case 'diagonal-stripes':
+      const step = 80;
+      let lines = '';
+      for (let i = -H; i < W + H; i += step) {
+        lines += `<line x1="${i}" y1="0" x2="${i+H}" y2="${H}" stroke="${color}" stroke-width="${Math.max(1,s*0.6)}" opacity="${opacity*0.6}"/>`;
+      }
+      svgContent = `<clipPath id="deco-clip"><rect x="0" y="0" width="${W}" height="${H}"/></clipPath>
+        <g clip-path="url(#deco-clip)">${lines}</g>
+        <rect x="${s/2}" y="${s/2}" width="${W-s}" height="${H-s}" ${attrs}/>`;
+      break;
+    case 'circle-deco':
+      svgContent = `
+        <ellipse cx="${W/2}" cy="${H/2}" rx="${W*0.35}" ry="${H*0.4}" ${attrs}/>
+        <ellipse cx="${W/2}" cy="${H/2}" rx="${W*0.48}" ry="${H*0.48}" stroke="${color}" stroke-width="${s*0.5}" fill="none" opacity="${opacity*0.5}"/>`;
+      break;
+    case 'ribbon-top':
+      const rh = Math.max(s * 5, 40);
+      svgContent = `<rect x="0" y="0" width="${W}" height="${rh}" ${fillAttrs}/>
+        <rect x="${s/2}" y="${s/2}" width="${W-s}" height="${H-s}" ${attrs}/>`;
+      break;
+  }
+
+  decoOverlay.innerHTML = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">${svgContent}</svg>`;
+}
+
+// ===== TEXTBOXES =====
+let nextId = 1;
+
+function newTextboxData() {
+  return {
+    id: 'tb_' + (nextId++),
+    text: 'テキスト',
+    x: 100, y: 100,
+    w: 500, h: 80,
+    font: "'Noto Sans JP', sans-serif",
+    size: 32,
+    weight: '500',
+    color: '#222222',
+    align: 'left',
+    valign: 'center',
+    lineHeight: 1.4,
+    letterSpacing: 0,
+    italic: false,
+    underline: false,
+    strike: false,
+    bgEnabled: false,
+    bg: '#ffffff',
+    bgOpacity: 100,
+    borderEnabled: false,
+    borderColor: '#333333',
+    borderWidth: 2,
+    borderRadius: 0
+  };
+}
+
+function addTextbox() {
+  const tb = newTextboxData();
+  tb.x = 100 + textboxes.length * 20;
+  tb.y = 100 + textboxes.length * 20;
+  textboxes.push(tb);
+  renderTextbox(tb);
+  renderTextboxList();
+  selectTextbox(tb.id);
+}
+
+function renderTextbox(tb) {
+  let el = document.getElementById('tb_el_' + tb.id);
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'tb_el_' + tb.id;
+    el.className = 'canvas-textbox';
+    el.innerHTML = `
+      <div class="tb-border"></div>
+      <div class="tb-content"></div>
+      <div class="resize-handle"></div>`;
+    tbLayer.appendChild(el);
+    makeDraggable(el, tb, 'text');
+    makeResizable(el, tb, 'text');
+    el.addEventListener('click', (e) => { e.stopPropagation(); selectTextbox(tb.id, e.shiftKey); });
+  }
+  el.style.left = tb.x + 'px';
+  el.style.top = tb.y + 'px';
+  el.style.width = tb.w + 'px';
+  el.style.height = tb.h + 'px';
+
+  const content = el.querySelector('.tb-content');
+  content.style.fontFamily = tb.font;
+  content.style.fontSize = tb.size + 'px';
+  content.style.fontWeight = tb.weight;
+  content.style.fontStyle = tb.italic ? 'italic' : 'normal';
+  content.style.textDecoration = [tb.underline ? 'underline' : '', tb.strike ? 'line-through' : ''].join(' ').trim() || 'none';
+  content.style.color = tb.color;
+  content.style.textAlign = tb.align;
+  content.style.lineHeight = tb.lineHeight;
+  content.style.letterSpacing = tb.letterSpacing + 'px';
+  content.style.display = 'flex';
+  content.style.alignItems = tb.valign;
+  content.style.padding = '6px 10px';
+  content.style.whiteSpace = 'pre-wrap';
+  content.style.wordBreak = 'break-word';
+  // inner span for text alignment within flex
+  content.innerHTML = `<span style="width:100%;text-align:${tb.align}">${tb.text.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')}</span>`;
+
+  // background
+  if (tb.bgEnabled) {
+    const hex = tb.bg;
+    const op = tb.bgOpacity / 100;
+    const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+    el.style.background = `rgba(${r},${g},${b},${op})`;
+  } else {
+    el.style.background = 'transparent';
+  }
+
+  // border
+  if (tb.borderEnabled) {
+    el.style.border = `${tb.borderWidth}px solid ${tb.borderColor}`;
+  } else {
+    el.style.border = 'none';
+  }
+  el.style.borderRadius = tb.borderRadius + 'px';
+  el.style.overflow = 'hidden';
+}
+
+function renderTextboxList() {
+  const list = document.getElementById('textbox-list');
+  list.innerHTML = '';
+  textboxes.forEach(tb => {
+    const item = document.createElement('div');
+    item.className = 'textbox-item' + (selectedId === tb.id && selectedType === 'text' ? ' selected' : '');
+    item.id = 'tblist_' + tb.id;
+    item.innerHTML = `
+      <div class="textbox-item-header">
+        <span class="textbox-item-label">${tb.text || '(空)'}</span>
+        <div class="textbox-item-actions">
+          <button class="icon-btn" onclick="duplicateTextbox('${tb.id}')" title="複製">⊕</button>
+          <button class="icon-btn danger" onclick="deleteTextbox('${tb.id}')" title="削除">✕</button>
+        </div>
+      </div>`;
+    item.addEventListener('click', (e) => selectTextbox(tb.id, e.shiftKey));
+    list.appendChild(item);
+  });
+}
+
+function selectTextbox(id, shiftKey) {
+  if (shiftKey && selectedType === 'text') {
+    // 複数選択モード
+    if (multiSelected.size === 0 && selectedId) multiSelected.add(selectedId);
+    if (multiSelected.has(id)) {
+      multiSelected.delete(id);
+      if (multiSelected.size === 1) {
+        const remaining = Array.from(multiSelected)[0];
+        selectedId = remaining;
+        multiSelected.clear();
+      }
+    } else {
+      multiSelected.add(id);
+      selectedId = id;
+    }
+  } else {
+    // 単体選択
+    multiSelected.clear();
+    selectedId = id;
+    selectedType = 'text';
+  }
+  selectedType = 'text';
+  // deselect images
+  images.forEach(img => {
+    const el = document.getElementById('img_el_' + img.id);
+    if (el) el.classList.remove('selected');
+  });
+  // update textbox borders
+  textboxes.forEach(tb => {
+    const el = document.getElementById('tb_el_' + tb.id);
+    if (el) {
+      el.classList.toggle('selected', tb.id === selectedId && multiSelected.size === 0);
+      el.classList.toggle('multi-selected', multiSelected.has(tb.id));
+    }
+  });
+  renderTextboxList();
+  if (multiSelected.size === 0) {
+    const tb = textboxes.find(t => t.id === id);
+    if (tb) loadPropsFromTextbox(tb);
+  }
+  document.getElementById('no-selection-msg').style.display = 'none';
+  document.querySelectorAll('.tab-content').forEach(t => t.style.display = '');
+  updateMultiSelectUI();
+}
+
+function deselectAll() {
+  selectedId = null;
+  selectedType = null;
+  multiSelected.clear();
+  textboxes.forEach(tb => {
+    const el = document.getElementById('tb_el_' + tb.id);
+    if (el) { el.classList.remove('selected'); el.classList.remove('multi-selected'); }
+  });
+  images.forEach(img => {
+    const el = document.getElementById('img_el_' + img.id);
+    if (el) el.classList.remove('selected');
+  });
+  renderTextboxList();
+  document.getElementById('no-selection-msg').style.display = '';
+  updateMultiSelectUI();
+}
+
+canvas.addEventListener('click', deselectAll);
+decoOverlay.addEventListener('click', deselectAll);
+
+function loadPropsFromTextbox(tb) {
+  document.getElementById('prop-text').value = tb.text;
+  document.getElementById('prop-font').value = tb.font;
+  document.getElementById('prop-size').value = tb.size;
+  document.getElementById('prop-weight').value = tb.weight;
+  document.getElementById('prop-color').value = tb.color;
+  document.getElementById('prop-lh').value = tb.lineHeight;
+  document.getElementById('lh-val').textContent = parseFloat(tb.lineHeight).toFixed(1);
+  document.getElementById('prop-ls').value = tb.letterSpacing;
+  document.getElementById('ls-val').textContent = parseFloat(tb.letterSpacing).toFixed(1);
+  document.getElementById('btn-italic').classList.toggle('active', tb.italic);
+  document.getElementById('btn-underline').classList.toggle('active', tb.underline);
+  document.getElementById('btn-strike').classList.toggle('active', tb.strike);
+  document.getElementById('prop-bg-enabled').checked = tb.bgEnabled;
+  document.getElementById('prop-bg').value = tb.bg;
+  document.getElementById('prop-bg-opacity').value = tb.bgOpacity;
+  document.getElementById('bg-op-val').textContent = tb.bgOpacity;
+  document.getElementById('prop-border-enabled').checked = tb.borderEnabled;
+  document.getElementById('prop-border-color').value = tb.borderColor;
+  document.getElementById('prop-border-width').value = tb.borderWidth;
+  document.getElementById('bw-val').textContent = tb.borderWidth;
+  document.getElementById('prop-border-radius').value = tb.borderRadius;
+  document.getElementById('br-val').textContent = tb.borderRadius;
+  document.getElementById('prop-x').value = Math.round(tb.x);
+  document.getElementById('prop-y').value = Math.round(tb.y);
+  document.getElementById('prop-w').value = Math.round(tb.w);
+  document.getElementById('prop-h').value = Math.round(tb.h);
+  // align buttons
+  document.querySelectorAll('.align-btns:first-of-type .align-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent.trim() === {left:'左',center:'中央',right:'右'}[tb.align]);
+  });
+}
+
+function updateSelectedText(prop, val) {
+  if (!selectedId || selectedType !== 'text') return;
+  const tb = textboxes.find(t => t.id === selectedId);
+  if (!tb) return;
+  if (prop === 'bgEnabled' || prop === 'borderEnabled') tb[prop] = val;
+  else if (['size','bgOpacity','borderWidth','borderRadius','lineHeight','letterSpacing'].includes(prop)) tb[prop] = parseFloat(val);
+  else tb[prop] = val;
+  renderTextbox(tb);
+  renderTextboxList();
+  document.getElementById('prop-x').value = Math.round(tb.x);
+  document.getElementById('prop-y').value = Math.round(tb.y);
+  document.getElementById('prop-w').value = Math.round(tb.w);
+  document.getElementById('prop-h').value = Math.round(tb.h);
+}
+
+function updateSelectedPos(prop, val) {
+  if (!selectedId) return;
+  const v = parseFloat(val);
+  if (isNaN(v)) return;
+  if (selectedType === 'text') {
+    const tb = textboxes.find(t => t.id === selectedId);
+    if (!tb) return;
+    if (prop === 'x') tb.x = v;
+    else if (prop === 'y') tb.y = v;
+    else if (prop === 'w') tb.w = v;
+    else if (prop === 'h') tb.h = v;
+    renderTextbox(tb);
+  } else if (selectedType === 'image') {
+    const img = images.find(i => i.id === selectedId);
+    if (!img) return;
+    if (prop === 'x') img.x = v;
+    else if (prop === 'y') img.y = v;
+    else if (prop === 'w') img.w = v;
+    else if (prop === 'h') img.h = v;
+    renderImageEl(img);
+  }
+}
+
+function toggleStyle(which) {
+  if (!selectedId || selectedType !== 'text') return;
+  const tb = textboxes.find(t => t.id === selectedId);
+  if (!tb) return;
+  tb[which] = !tb[which];
+  document.getElementById('btn-' + which).classList.toggle('active', tb[which]);
+  renderTextbox(tb);
+}
+
+function setAlignActive(el) {
+  el.parentElement.querySelectorAll('.align-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+function setVAlignActive(el) {
+  el.parentElement.querySelectorAll('.align-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function applyColorPreset(val) {
+  if (!val) return;
+  document.getElementById('prop-color').value = val;
+  updateSelectedText('color', val);
+  document.getElementById('prop-color-preset').value = '';
+}
+
+function deleteTextbox(id) {
+  textboxes = textboxes.filter(t => t.id !== id);
+  const el = document.getElementById('tb_el_' + id);
+  if (el) el.remove();
+  if (selectedId === id) deselectAll();
+  renderTextboxList();
+}
+
+function duplicateTextbox(id) {
+  const tb = textboxes.find(t => t.id === id);
+  if (!tb) return;
+  const copy = JSON.parse(JSON.stringify(tb));
+  copy.id = 'tb_' + (nextId++);
+  copy.x += 20; copy.y += 20;
+  textboxes.push(copy);
+  renderTextbox(copy);
+  renderTextboxList();
+  selectTextbox(copy.id);
+}
+
+function duplicateSelected() {
+  if (!selectedId) return;
+  if (selectedType === 'text') duplicateTextbox(selectedId);
+  else if (selectedType === 'image') duplicateImage(selectedId);
+}
+
+function deleteSelected() {
+  if (!selectedId) return;
+  if (selectedType === 'text') deleteTextbox(selectedId);
+  else if (selectedType === 'image') deleteImage(selectedId);
+}
+
+function centerSelected() { snapToCanvasCenter('both'); }
+
+function snapToCanvasCenter(axis) {
+  if (!selectedId) return;
+  if (selectedType === 'text') {
+    const tb = textboxes.find(t => t.id === selectedId);
+    if (!tb) return;
+    if (axis === 'h' || axis === 'both') tb.x = (CANVAS_W - tb.w) / 2;
+    if (axis === 'v' || axis === 'both') tb.y = (CANVAS_H - tb.h) / 2;
+    renderTextbox(tb);
+    loadPropsFromTextbox(tb);
+  } else if (selectedType === 'image') {
+    const img = images.find(i => i.id === selectedId);
+    if (!img) return;
+    if (axis === 'h' || axis === 'both') img.x = (CANVAS_W - img.w) / 2;
+    if (axis === 'v' || axis === 'both') img.y = (CANVAS_H - img.h) / 2;
+    renderImageEl(img);
+  }
+}
+
+// 複数選択の端揃え
+function alignSelected(mode) {
+  const ids = Array.from(multiSelected);
+  if (ids.length < 2) return;
+  const tbs = ids.map(id => textboxes.find(t => t.id === id)).filter(Boolean);
+  if (tbs.length < 2) return;
+
+  const lefts   = tbs.map(t => t.x);
+  const rights  = tbs.map(t => t.x + t.w);
+  const tops    = tbs.map(t => t.y);
+  const bottoms = tbs.map(t => t.y + t.h);
+
+  tbs.forEach(tb => {
+    switch(mode) {
+      case 'left':    tb.x = Math.min(...lefts); break;
+      case 'right':   tb.x = Math.max(...rights) - tb.w; break;
+      case 'top':     tb.y = Math.min(...tops); break;
+      case 'bottom':  tb.y = Math.max(...bottoms) - tb.h; break;
+      case 'centerH': {
+        const midX = (Math.min(...lefts) + Math.max(...rights)) / 2;
+        tb.x = midX - tb.w / 2;
+        break;
+      }
+      case 'centerV': {
+        const midY = (Math.min(...tops) + Math.max(...bottoms)) / 2;
+        tb.y = midY - tb.h / 2;
+        break;
+      }
+    }
+    renderTextbox(tb);
+  });
+}
+
+// テーマ切り替え
+function toggleTheme() {
+  isDark = !isDark;
+  document.body.classList.toggle('dark', isDark);
+  document.getElementById('theme-btn').textContent = isDark ? '☀️ ライト' : '🌙 ダーク';
+}
+
+// 複数選択ツールバー表示更新
+function updateMultiSelectUI() {
+  const show = multiSelected.size >= 2;
+  const label = document.getElementById('align-label');
+  const btns = document.getElementById('multi-align-btns');
+  label.style.display = show ? '' : 'none';
+  btns.style.display = show ? 'flex' : 'none';
+}
+
+// ===== DRAG & RESIZE =====
+function makeDraggable(el, data, type) {
+  let startX, startY, startDataX, startDataY;
+  el.addEventListener('mousedown', (e) => {
+    if (e.target.classList.contains('resize-handle')) return;
+    e.preventDefault();
+    startX = e.clientX;
+    startY = e.clientY;
+    startDataX = data.x;
+    startDataY = data.y;
+    document.body.classList.add('dragging');
+    const onMove = (e) => {
+      const dx = (e.clientX - startX) / zoom;
+      const dy = (e.clientY - startY) / zoom;
+      data.x = Math.max(0, Math.min(CANVAS_W - data.w, startDataX + dx));
+      data.y = Math.max(0, Math.min(CANVAS_H - data.h, startDataY + dy));
+      el.style.left = data.x + 'px';
+      el.style.top = data.y + 'px';
+      if (selectedId === data.id) {
+        document.getElementById('prop-x').value = Math.round(data.x);
+        document.getElementById('prop-y').value = Math.round(data.y);
+      }
+    };
+    const onUp = () => {
+      document.body.classList.remove('dragging');
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+}
+
+function makeResizable(el, data, type) {
+  const handle = el.querySelector('.resize-handle');
+  handle.addEventListener('mousedown', (e) => {
+    e.preventDefault(); e.stopPropagation();
+    const startX = e.clientX, startY = e.clientY;
+    const startW = data.w, startH = data.h;
+    document.body.classList.add('dragging');
+    const onMove = (e) => {
+      data.w = Math.max(60, startW + (e.clientX - startX) / zoom);
+      data.h = Math.max(30, startH + (e.clientY - startY) / zoom);
+      el.style.width = data.w + 'px';
+      el.style.height = data.h + 'px';
+      if (type === 'text') {
+        const content = el.querySelector('.tb-content');
+        if (content) content.style.height = data.h + 'px';
+      }
+      if (selectedId === data.id) {
+        document.getElementById('prop-w').value = Math.round(data.w);
+        document.getElementById('prop-h').value = Math.round(data.h);
+      }
+    };
+    const onUp = () => {
+      document.body.classList.remove('dragging');
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+}
+
+// ===== IMAGES =====
+function addImage(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const src = e.target.result;
+    const imgObj = new Image();
+    imgObj.onload = () => {
+      const ratio = imgObj.width / imgObj.height;
+      const w = Math.min(400, CANVAS_W * 0.4);
+      const h = w / ratio;
+      const imgData = {
+        id: 'img_' + (nextId++),
+        src, x: 100, y: 100, w, h
+      };
+      images.push(imgData);
+      renderImageEl(imgData);
+      selectImage(imgData.id);
+    };
+    imgObj.src = src;
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+
+function renderImageEl(img) {
+  let el = document.getElementById('img_el_' + img.id);
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'img_el_' + img.id;
+    el.className = 'canvas-image';
+    el.innerHTML = `<div class="img-border"></div><img src="${img.src}"><div class="resize-handle"></div>`;
+    imgLayer.appendChild(el);
+    makeDraggable(el, img, 'image');
+    makeResizable(el, img, 'image');
+    el.addEventListener('click', (e) => { e.stopPropagation(); selectImage(img.id); });
+  }
+  el.style.left = img.x + 'px';
+  el.style.top = img.y + 'px';
+  el.style.width = img.w + 'px';
+  el.style.height = img.h + 'px';
+}
+
+function selectImage(id) {
+  selectedId = id;
+  selectedType = 'image';
+  multiSelected.clear();
+  textboxes.forEach(tb => {
+    const el = document.getElementById('tb_el_' + tb.id);
+    if (el) { el.classList.remove('selected'); el.classList.remove('multi-selected'); }
+  });
+  images.forEach(img => {
+    const el = document.getElementById('img_el_' + img.id);
+    if (el) el.classList.toggle('selected', img.id === id);
+  });
+  renderTextboxList();
+  updateMultiSelectUI();
+  document.getElementById('no-selection-msg').style.display = 'none';
+  const img = images.find(i => i.id === id);
+  if (img) {
+    document.getElementById('prop-x').value = Math.round(img.x);
+    document.getElementById('prop-y').value = Math.round(img.y);
+    document.getElementById('prop-w').value = Math.round(img.w);
+    document.getElementById('prop-h').value = Math.round(img.h);
+  }
+  switchTab('pos');
+}
+
+function deleteImage(id) {
+  images = images.filter(i => i.id !== id);
+  const el = document.getElementById('img_el_' + id);
+  if (el) el.remove();
+  if (selectedId === id) deselectAll();
+}
+
+function duplicateImage(id) {
+  const img = images.find(i => i.id === id);
+  if (!img) return;
+  const copy = JSON.parse(JSON.stringify(img));
+  copy.id = 'img_' + (nextId++);
+  copy.x += 20; copy.y += 20;
+  images.push(copy);
+  renderImageEl(copy);
+  selectImage(copy.id);
+}
+
+// ===== TAB =====
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    const names = ['text', 'pos'];
+    t.classList.toggle('active', names[i] === name);
+  });
+  document.getElementById('props-text').classList.toggle('active', name === 'text');
+  document.getElementById('props-pos').classList.toggle('active', name === 'pos');
+  document.getElementById('props-text').style.display = name === 'text' ? '' : 'none';
+  document.getElementById('props-pos').style.display = name === 'pos' ? '' : 'none';
+}
+
+// ===== CLEAR =====
+function clearAll() {
+  if (!confirm('すべての要素を削除しますか？')) return;
+  textboxes.forEach(tb => {
+    const el = document.getElementById('tb_el_' + tb.id);
+    if (el) el.remove();
+  });
+  images.forEach(img => {
+    const el = document.getElementById('img_el_' + img.id);
+    if (el) el.remove();
+  });
+  textboxes = [];
+  images = [];
+  deselectAll();
+  renderTextboxList();
+}
+
+// ===== EXPORT =====
+async function exportPNG() {
+  const btn = document.getElementById('export-btn');
+  btn.textContent = '⏳ 処理中...';
+  btn.disabled = true;
+
+  // Draw everything to canvas
+  const exportCanvas = document.createElement('canvas');
+  exportCanvas.width = CANVAS_W;
+  exportCanvas.height = CANVAS_H;
+  const ectx = exportCanvas.getContext('2d');
+
+  // 1. Background
+  const bgColor = document.getElementById('bg-color').value;
+  const bgColor2 = document.getElementById('bg-color2').value;
+  const bgStyle = document.getElementById('bg-style').value;
+  if (bgStyle === 'solid') {
+    ectx.fillStyle = bgColor;
+    ectx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+  } else {
+    let grad;
+    if (bgStyle === 'gradient-lr') grad = ectx.createLinearGradient(0, 0, CANVAS_W, 0);
+    else if (bgStyle === 'gradient-tb') grad = ectx.createLinearGradient(0, 0, 0, CANVAS_H);
+    else grad = ectx.createLinearGradient(0, 0, CANVAS_W, CANVAS_H);
+    grad.addColorStop(0, bgColor);
+    grad.addColorStop(1, bgColor2);
+    ectx.fillStyle = grad;
+    ectx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+  }
+
+  // 2. Images
+  for (const imgData of images) {
+    await new Promise(res => {
+      const img = new Image();
+      img.onload = () => {
+        ectx.drawImage(img, imgData.x, imgData.y, imgData.w, imgData.h);
+        res();
+      };
+      img.src = imgData.src;
+    });
+  }
+
+  // 3. Textboxes
+  for (const tb of textboxes) {
+    ectx.save();
+    // bg
+    if (tb.bgEnabled) {
+      const hex = tb.bg;
+      const op = tb.bgOpacity / 100;
+      const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+      ectx.fillStyle = `rgba(${r},${g},${b},${op})`;
+      ectx.beginPath();
+      ectx.roundRect(tb.x, tb.y, tb.w, tb.h, tb.borderRadius);
+      ectx.fill();
+    }
+    // border
+    if (tb.borderEnabled) {
+      ectx.strokeStyle = tb.borderColor;
+      ectx.lineWidth = tb.borderWidth;
+      ectx.beginPath();
+      ectx.roundRect(tb.x, tb.y, tb.w, tb.h, tb.borderRadius);
+      ectx.stroke();
+    }
+    // text
+    const lines = tb.text.split('\n');
+    const style = `${tb.italic ? 'italic ' : ''}${tb.weight} ${tb.size}px ${tb.font}`;
+    ectx.font = style;
+    ectx.fillStyle = tb.color;
+    ectx.textAlign = tb.align === 'left' ? 'left' : tb.align === 'right' ? 'right' : 'center';
+    ectx.letterSpacing = tb.letterSpacing + 'px';
+    const lineH = tb.size * tb.lineHeight;
+    const totalH = lines.length * lineH;
+    let startY;
+    if (tb.valign === 'flex-start') startY = tb.y + tb.size + 6;
+    else if (tb.valign === 'flex-end') startY = tb.y + tb.h - totalH + tb.size;
+    else startY = tb.y + (tb.h - totalH) / 2 + tb.size;
+    let textX = tb.align === 'left' ? tb.x + 10 : tb.align === 'right' ? tb.x + tb.w - 10 : tb.x + tb.w / 2;
+    lines.forEach((line, i) => {
+      const ly = startY + i * lineH;
+      ectx.fillText(line, textX, ly);
+      if (tb.underline || tb.strike) {
+        const tw = ectx.measureText(line).width;
+        const lx = tb.align === 'left' ? textX : tb.align === 'right' ? textX - tw : textX - tw / 2;
+        ectx.strokeStyle = tb.color;
+        ectx.lineWidth = Math.max(1, tb.size * 0.06);
+        if (tb.underline) { ectx.beginPath(); ectx.moveTo(lx, ly+2); ectx.lineTo(lx+tw, ly+2); ectx.stroke(); }
+        if (tb.strike) { ectx.beginPath(); ectx.moveTo(lx, ly - tb.size*0.3); ectx.lineTo(lx+tw, ly - tb.size*0.3); ectx.stroke(); }
+      }
+    });
+    ectx.restore();
+  }
+
+  // 4. Decoration (re-draw on canvas)
+  const decoSvg = decoOverlay.querySelector('svg');
+  if (decoSvg) {
+    await new Promise(res => {
+      const svgData = new XMLSerializer().serializeToString(decoSvg);
+      const svgBlob = new Blob([svgData], {type: 'image/svg+xml'});
+      const url = URL.createObjectURL(svgBlob);
+      const img = new Image();
+      img.onload = () => { ectx.drawImage(img, 0, 0, CANVAS_W, CANVAS_H); URL.revokeObjectURL(url); res(); };
+      img.src = url;
+    });
+  }
+
+  // Download
+  exportCanvas.toBlob(blob => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'slide-toc.png';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    btn.textContent = '📥 PNGエクスポート';
+    btn.disabled = false;
+  }, 'image/png');
+}
+
+// ===== KEYBOARD SHORTCUTS =====
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+  if (e.key === 'Delete' || e.key === 'Backspace') deleteSelected();
+  if (e.key === 'Escape') deselectAll();
+  if ((e.ctrlKey || e.metaKey) && e.key === 'd') { e.preventDefault(); duplicateSelected(); }
+});
+
+// ===== INIT =====
+drawBackground();
+applyZoom();
+updateMultiSelectUI();
+
+// Hide prop panels initially
+document.getElementById('props-text').style.display = '';
+document.getElementById('props-pos').style.display = 'none';
+
+// Add a default title textbox
+const defaultTb = newTextboxData();
+defaultTb.text = '目次';
+defaultTb.x = 90;
+defaultTb.y = 60;
+defaultTb.w = 600;
+defaultTb.h = 90;
+defaultTb.size = 60;
+defaultTb.weight = '700';
+defaultTb.color = '#1a1a2e';
+textboxes.push(defaultTb);
+renderTextbox(defaultTb);
+
+const sub1 = newTextboxData();
+sub1.text = '1. はじめに';
+sub1.x = 90; sub1.y = 200;
+sub1.w = 500; sub1.h = 60;
+sub1.size = 32;
+sub1.color = '#333355';
+textboxes.push(sub1);
+renderTextbox(sub1);
+
+const sub2 = newTextboxData();
+sub2.text = '2. 本題';
+sub2.x = 90; sub2.y = 280;
+sub2.w = 500; sub2.h = 60;
+sub2.size = 32;
+sub2.color = '#333355';
+textboxes.push(sub2);
+renderTextbox(sub2);
+
+const sub3 = newTextboxData();
+sub3.text = '3. まとめ';
+sub3.x = 90; sub3.y = 360;
+sub3.w = 500; sub3.h = 60;
+sub3.size = 32;
+sub3.color = '#333355';
+textboxes.push(sub3);
+renderTextbox(sub3);
+
+renderTextboxList();
+</script>
+</body>
+</html>
